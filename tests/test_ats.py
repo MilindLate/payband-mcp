@@ -321,6 +321,7 @@ def test_board_label_uses_resolved_slug(monkeypatch):
     label, _ = ats.fetch_postings("Toast", board="greenhouse:toast")
     assert label == "greenhouse:toast"
 
+
 def test_board_slugs_strips_trailing_inc():
     assert "toast" in ats.board_slugs("Toast, Inc.")
 
@@ -335,7 +336,7 @@ def test_board_slugs_keeps_group():
 
 def test_board_slugs_leading_ab_unchanged():
     assert ats.board_slugs("AB InBev") == ["abinbev", "ab-inbev"]
-    
+
 
 def test_board_slugs_strips_dotted_nv():
     assert "adyen" in ats.board_slugs("Adyen N.V.")
@@ -343,3 +344,18 @@ def test_board_slugs_strips_dotted_nv():
 
 def test_board_slugs_strips_co_ltd():
     assert "samsungelectronics" in ats.board_slugs("Samsung Electronics Co., Ltd.")
+
+
+def test_board_slugs_fold_accents_to_ascii():
+    assert ats.board_slugs("Nestlé")[0] == "nestle"
+    assert ats.board_slugs("Société Générale") == ["societegenerale", "societe-generale"]
+    assert ats.board_slugs("Škoda Auto") == ["skodaauto", "skoda-auto"]
+    assert ats.board_slugs("Ørsted") == ["orsted"]
+    assert ats.board_slugs("Mærsk") == ["maersk"]
+    assert "strasse" in ats.board_slugs("Straße AG")
+    assert "strasseag" in ats.board_slugs("Straße AG")
+    assert ats.board_slugs("Łukasiewicz") == ["lukasiewicz"]
+    # ASCII names come out unchanged
+    assert ats.board_slugs("Goldman Sachs") == ["goldmansachs", "goldman-sachs"]
+    assert ats.board_slugs("Roku") == ["roku"]
+
