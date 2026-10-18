@@ -25,9 +25,6 @@ a claimed issue says so in its title instead.
 
 | # | Size | What's wrong | Why it matters |
 | --- | --- | --- | --- |
-| [#37](https://github.com/dheerajjha/payband-mcp/issues/37) | XS | `board_slugs` deletes accented letters, so Nestlé is looked up as `nestl` | European employer names are where the accents are, and the whole point is markets outside the US. A pure function, tested offline. |
-| [#38](https://github.com/dheerajjha/payband-mcp/issues/38) | XS | `board_slugs` keeps legal suffixes, so "Toast, Inc." never tries `toast` | The legal name is what an offer letter says. Same function as #37, so whichever lands second rebases. |
-| [#39](https://github.com/dheerajjha/payband-mcp/issues/39) | XS | `board="greenhouse"` with no slug reports `"greenhouse:"` as the board it read | A one-word fix in `ats.py`, and the caller can finally see which board answered. |
 | [#26](https://github.com/dheerajjha/payband-mcp/issues/26) | S | Workday tenants can't be found from a company name | Mostly a **data** contribution, and **no Python needed to start**: open a careers page, read the tenant out of the URL, add a row, add a test. One verified row is a real contribution. **Take the Workday half** — Workday is in `_BOARDS`, so your row is live on merge. The Keka half of that issue is dormant until [#27](https://github.com/dheerajjha/payband-mcp/issues/27) lands. |
 
 ## Bigger, and also open
@@ -46,7 +43,9 @@ Each of these is `help wanted` and `mentored`, but not a first issue.
 
 | # | Size | Status |
 | --- | --- | --- |
-| [#23](https://github.com/dheerajjha/payband-mcp/issues/23) | XS | Claimed by @Rayan-and-beyond. If there's no reply by 2026-10-25, it opens up again. |
+| [#23](https://github.com/dheerajjha/payband-mcp/issues/23) | XS | Claimed by @Rayan-and-beyond, in review as [#41](https://github.com/dheerajjha/payband-mcp/pull/41) |
+| [#37](https://github.com/dheerajjha/payband-mcp/issues/37) | XS | In review as [#43](https://github.com/dheerajjha/payband-mcp/pull/43), by @MilindLate |
+| [#38](https://github.com/dheerajjha/payband-mcp/issues/38) | XS | Claimed by @subhrajeetshaw008-bit; builds on #43 |
 | [#18](https://github.com/dheerajjha/payband-mcp/issues/18) | S | Folded into [#26](https://github.com/dheerajjha/payband-mcp/issues/26) — same registry, one issue. Still open, and still the place the Workday URL shapes are written up, which is what #26 links to. Take #26 |
 
 ## Open, but currently dormant
