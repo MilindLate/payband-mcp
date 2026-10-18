@@ -327,7 +327,7 @@ def fetch_postings(
         if name == "workday":
             found = postings[0]["_detail"]
             return f"workday:{found['tenant']}/{found['site']}", postings
-        return f"{name}:{slug}", postings
+        return f"{name}:{target}", postings
 
     # Self-hosted employers first: an exact name match, one request, and no
     # slug guessing. Only fires for a company we have written an adapter for,

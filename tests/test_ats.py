@@ -280,3 +280,22 @@ def test_slugs_never_contain_characters_a_url_rejects():
 def test_slug_shaped_names_are_still_tried_verbatim():
     assert "goldman-sachs" in ats.board_slugs("goldman-sachs")
     assert ats.board_slugs("Roku") == ["roku"]
+
+
+def test_board_label_uses_resolved_slug(monkeypatch):
+    seen = []
+
+    def fake_greenhouse(slug):
+        seen.append(slug)
+        return [{"title": "Engineer"}]
+
+    # _BOARDS holds references to the loaders, so patching ats._greenhouse
+    # would have no effect; replace the table entry instead.
+    monkeypatch.setattr(ats, "_BOARDS", (("greenhouse", fake_greenhouse),))
+
+    label, _ = ats.fetch_postings("Toast", board="greenhouse")
+    assert label == "greenhouse:toast"
+    assert seen == ["toast"]
+
+    label, _ = ats.fetch_postings("Toast", board="greenhouse:toast")
+    assert label == "greenhouse:toast"
