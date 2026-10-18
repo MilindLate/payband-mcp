@@ -288,7 +288,7 @@ Maintainers: see [MAINTAINING.md](MAINTAINING.md).
 Start with [**good first issues**](https://github.com/dheerajjha/payband-mcp/blob/main/.github/GOOD_FIRST_ISSUES.md), then
 [CONTRIBUTING.md](https://github.com/dheerajjha/payband-mcp/blob/main/CONTRIBUTING.md). Issues are labelled by size (`size: XS`
 is under 30 minutes) and `mentored` means ask questions in the thread and
-you'll get walked through it. Claim one in a comment and it's assigned to you.
+you'll get walked through it. Claim one in a comment, so nobody else starts on it.
 First review within 48 hours — reviewed by running it, not just reading it.
 
 Two hard rules, both explained in CONTRIBUTING: **don't commit captured Blind

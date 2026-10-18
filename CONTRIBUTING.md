@@ -112,7 +112,7 @@ throttling live. A tool that calls `httpx` directly bypasses all three.
 
 ```bash
 uv sync
-uv run pytest -q          # 12 tests, all offline
+uv run pytest -q          # 143 tests, all offline
 uv run payband-mcp          # stdio, for an MCP client
 uv run payband-mcp --http   # HTTP on :8787, for pm2
 ```
