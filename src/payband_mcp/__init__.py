@@ -1,3 +1,3 @@
 """Pay bands from public job boards, plus Blind company research."""
 
-__version__ = "0.11.0"
+__version__ = "0.12.0"

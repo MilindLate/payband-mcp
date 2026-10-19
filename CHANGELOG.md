@@ -2,6 +2,37 @@
 
 Notable changes per release. Dates are UTC.
 
+## 0.12.0 — 2026-10-19
+
+- **SmartRecruiters and Workday pass the posting's location to the pay
+  parser.** ([#23](https://github.com/dheerajjha/payband-mcp/issues/23),
+  [#41](https://github.com/dheerajjha/payband-mcp/pull/41), from
+  @Rayan-and-beyond)
+  - 0.11.0 taught the parser to read a bare `$` against the posting's
+    location. These two adapters fetch pay in a separate request and passed
+    no location, so a Toronto posting's `$120,000 - $150,000` still read as
+    USD there.
+  - Both now pass it. SmartRecruiters builds it the way its listing already
+    did: `fullLocation`, otherwise city, region and country.
+- **`board_slugs` tries the name without one trailing legal suffix first.**
+  ([#38](https://github.com/dheerajjha/payband-mcp/issues/38),
+  [#45](https://github.com/dheerajjha/payband-mcp/pull/45), from
+  @subhrajeetshaw008-bit)
+  - "Toast, Inc." now tries `toast` before `toastinc`. The same goes for SE,
+    AB, AG, GmbH, LLC, Ltd and PLC, and for the dotted forms N.V., S.A., B.V.,
+    S.p.A. and Co., Ltd.
+  - Only one trailing suffix comes off, never a leading word, so "AB InBev"
+    and "Bosch Group" are unchanged.
+- **The board label names the board that was read.**
+  ([#39](https://github.com/dheerajjha/payband-mcp/issues/39),
+  [#42](https://github.com/dheerajjha/payband-mcp/pull/42), from
+  @subhrajeetshaw008-bit) `board="greenhouse"` with no slug reported
+  `"greenhouse:"`. It now reports the slug it filled in, such as
+  `"greenhouse:toast"`.
+- The lockfile moves to mcp 2.3.0 and PyJWT 2.15.1
+  ([#36](https://github.com/dheerajjha/payband-mcp/pull/36)). Installs from
+  PyPI already resolved those.
+
 ## 0.11.0 — 2026-09-17
 
 - **A bare `$` is resolved against the posting's own location.** `$120,000 -
