@@ -203,16 +203,7 @@ def _smartrecruiters(slug: str, role: str = "") -> list[dict[str, Any]]:
         out.append(
             _posting(
                 job.get("name"),
-                location.get("fullLocation")
-                or ", ".join(
-                    part
-                    for part in (
-                        location.get("city"),
-                        location.get("region"),
-                        location.get("country"),
-                    )
-                    if part
-                ),
+                smartrecruiters.format_location(location),
                 f"https://jobs.smartrecruiters.com/{slug}/{posting_id}",
                 None,
                 company.get("name") or slug,

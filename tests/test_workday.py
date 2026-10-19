@@ -99,6 +99,23 @@ def test_pay_is_read_from_the_description(monkeypatch):
     assert (pay["min"], pay["max"], pay["currency"]) == (184000, 287500, "USD")
 
 
+def test_pay_uses_posting_location_for_bare_dollars(monkeypatch):
+    monkeypatch.setattr(
+        workday,
+        "_request",
+        lambda *a, **k: {
+            "jobPostingInfo": {
+                "jobDescription": "Salary range $120,000 - $150,000.",
+                "location": "Toronto, ON, Canada",
+            }
+        },
+    )
+
+    pay = workday.fetch_pay("h", "t", "s", "/job/x")
+
+    assert (pay["min"], pay["max"], pay["currency"]) == (120000, 150000, "CAD")
+
+
 def test_unchecked_postings_are_not_reported_as_publishing_nothing(monkeypatch):
     """Cisco matched 111 postings while only 40 were looked at."""
     postings = [

@@ -165,4 +165,8 @@ def fetch_pay(
     except (urllib.error.HTTPError, urllib.error.URLError, json.JSONDecodeError):
         return None
     info = data.get("jobPostingInfo") or {}
-    return money.parse(info.get("jobDescription"))
+    location = info.get("location") or ""
+    return money.parse(
+        info.get("jobDescription"),
+        location=location if isinstance(location, str) else "",
+    )

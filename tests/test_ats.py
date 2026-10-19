@@ -174,6 +174,27 @@ def test_smartrecruiters_lists_and_enriches_from_literal_payloads(monkeypatch):
     ]
 
 
+def test_smartrecruiters_uses_posting_location_for_bare_dollars(monkeypatch):
+    detail = {
+        "location": {
+            "country": "ca",
+            "fullLocation": "Toronto, ON, Canada",
+        },
+        "jobAd": {
+            "sections": {
+                "additionalInformation": {
+                    "text": "Salary range $120,000 - $150,000."
+                }
+            }
+        },
+    }
+    monkeypatch.setattr(smartrecruiters, "_request", lambda *a, **k: detail)
+
+    pay = smartrecruiters.fetch_pay("Acme", "posting-1")
+
+    assert (pay["min"], pay["max"], pay["currency"]) == (120000, 150000, "CAD")
+
+
 def test_smartrecruiters_pages_without_fetching_details(monkeypatch):
     """Listing is bounded and never turns into one detail request per job."""
     pages = {
