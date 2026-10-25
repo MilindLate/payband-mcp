@@ -15,6 +15,7 @@ from __future__ import annotations
 import html as _html
 import json
 import re
+import unicodedata
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -265,6 +266,23 @@ def enrich_pay(postings: list[dict[str, Any]], limit: int = 40) -> int:
     return len(pending)
 
 
+_LATIN = str.maketrans({
+    "ø": "o", "Ø": "O", "æ": "ae", "Æ": "AE", "œ": "oe", "Œ": "OE", "ß": "ss",
+    "ł": "l", "Ł": "L", "đ": "d", "Đ": "D", "ð": "d", "Ð": "D", "þ": "th", "Þ": "TH", "ı": "i",
+})
+
+
+def _fold_ascii(s: str) -> str:
+    """Fold accents and non-ASCII characters to plain lowercase ASCII."""
+    return (
+        unicodedata.normalize("NFKD", s.translate(_LATIN))
+        .encode("ascii", "ignore")
+        .decode()
+        .strip()
+        .lower()
+    )
+
+
 def _slugs_for_name(company: str) -> list[str]:
     """Plausible job-board tokens for a company name, most likely first.
 
@@ -274,7 +292,7 @@ def _slugs_for_name(company: str) -> list[str]:
     deep inside httpx instead of the BoardNotFound that tells a caller what to
     do next. No job board has a slug with whitespace in it.
     """
-    base = company.strip().lower()
+    base = _fold_ascii(company)
     collapsed = re.sub(r"[^a-z0-9]+", "", base)
     hyphen = re.sub(r"[^a-z0-9]+", "-", base).strip("-")
     candidates = [collapsed, hyphen]
@@ -282,6 +300,7 @@ def _slugs_for_name(company: str) -> list[str]:
         candidates.append(base)
     seen: set[str] = set()
     return [s for s in candidates if s and not (s in seen or seen.add(s))]
+
 
 _LEGAL_SUFFIX = re.compile(
     r"[\s,]+(?:inc|llc|ltd|limited|plc|gmbh|ag|se|ab|corp|corporation|company"
@@ -303,8 +322,9 @@ def board_slugs(company: str) -> list[str]:
     A trailing legal suffix ("Inc.", "SE", "AB") is not part of a board's
     token, so the name without it is tried first, then the full name.
     """
-    stripped = _strip_legal_suffix(company)
-    names = [stripped, company] if stripped else [company]
+    folded = _fold_ascii(company)
+    stripped = _strip_legal_suffix(folded)
+    names = [stripped, folded] if stripped else [folded]
     seen: set[str] = set()
     return [
         s
@@ -353,7 +373,7 @@ def fetch_postings(
     # Self-hosted employers first: an exact name match, one request, and no
     # slug guessing. Only fires for a company we have written an adapter for,
     # so it costs nothing for everyone else.
-    own = selfhosted.EMPLOYERS.get(re.sub(r"[^a-z0-9]+", "", company.strip().lower()))
+    own = selfhosted.EMPLOYERS.get(re.sub(r"[^a-z0-9]+", "", _fold_ascii(company)))
     if own:
         try:
             postings = own(USER_AGENT)
