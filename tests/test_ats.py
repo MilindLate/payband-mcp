@@ -346,6 +346,23 @@ def test_board_slugs_strips_co_ltd():
     assert "samsungelectronics" in ats.board_slugs("Samsung Electronics Co., Ltd.")
 
 
+def test_board_slugs_strips_as():
+    assert ats.board_slugs("Ørsted A/S")[0] == "orsted"
+    assert "orsted" in ats.board_slugs("Ørsted A/S")
+    assert "maersk" in ats.board_slugs("Mærsk A/S")
+
+
+def test_board_slugs_strips_ehf():
+    assert ats.board_slugs("Þórsmörk ehf")[0] == "thorsmork"
+    assert "thorsmork" in ats.board_slugs("Þórsmörk ehf.")
+
+
+def test_board_slugs_strips_doo():
+    assert ats.board_slugs("Đorđević d.o.o.")[0] == "dordevic"
+    assert "dordevic" in ats.board_slugs("Đorđević d.o.o")
+    assert "dordevic" in ats.board_slugs("Đorđević doo")
+
+
 def test_board_slugs_fold_accents_to_ascii():
     assert ats.board_slugs("Nestlé")[0] == "nestle"
     assert ats.board_slugs("Société Générale") == ["societegenerale", "societe-generale"]
