@@ -304,7 +304,8 @@ def _slugs_for_name(company: str) -> list[str]:
 
 _LEGAL_SUFFIX = re.compile(
     r"[\s,]+(?:inc|llc|ltd|limited|plc|gmbh|ag|se|ab|corp|corporation|company"
-    r"|co(?:\.?,?\s*ltd)?|s\.?a|s\.?p\.?a|n\.?v|b\.?v)\.?\s*$",
+    r"|co(?:\.?,?\s*ltd)?|s\.?a|s\.?p\.?a|n\.?v|b\.?v"
+    r"|a[./]?s|ehf|d\.?o\.?o)\.?\s*$",
     re.I,
 )
 
