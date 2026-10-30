@@ -363,6 +363,13 @@ def test_board_slugs_strips_doo():
     assert "dordevic" in ats.board_slugs("Đorđević doo")
 
 
+def test_board_slugs_strips_asa():
+    assert ats.board_slugs("Equinor ASA")[0] == "equinor"
+    assert "equinor" in ats.board_slugs("Equinor ASA")
+    assert "equinor" in ats.board_slugs("Equinor A.S.A.")
+    assert "equinor" in ats.board_slugs("Equinor asa")
+
+
 def test_board_slugs_fold_accents_to_ascii():
     assert ats.board_slugs("Nestlé")[0] == "nestle"
     assert ats.board_slugs("Société Générale") == ["societegenerale", "societe-generale"]
