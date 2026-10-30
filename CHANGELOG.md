@@ -2,6 +2,27 @@
 
 Notable changes per release. Dates are UTC.
 
+## 0.12.1 — 2026-10-30
+
+- **Board slugs fold accented letters to plain ASCII.**
+  ([#43](https://github.com/dheerajjha/payband-mcp/pull/43), from @MilindLate)
+  - Job boards spell their slugs in ASCII, so "Ørsted" now tries `orsted`,
+    "Mærsk" `maersk`, "Straße AG" `strasse` and "Łukasiewicz" `lukasiewicz`.
+    Letters that Unicode normalization can't decompose (ø, æ, œ, ß, ł, đ, ð,
+    þ, ı) go through a small table first.
+  - The fold happens before the legal-suffix match, and the self-hosted
+    employer lookup uses it too.
+- **Three more legal suffixes come off board slugs.**
+  ([#46](https://github.com/dheerajjha/payband-mcp/pull/46), from @MilindLate)
+  - Danish and Norwegian `A/S` and `AS`, Icelandic `ehf` and South Slavic
+    `d.o.o.`: "Novo Nordisk A/S" now tries `novonordisk` first. A name that
+    merely ends in "as", such as "Atlas", is unchanged.
+- **The lockfile picks up two security fixes:** certifi 2026.10.18
+  (GHSA-6q48-6c7w-9gw2, #48) and opentelemetry-api 1.45.1
+  (GHSA-xcq7-p3pf-p88h, #47). Both arrive through dependencies whose ranges
+  already allowed the fixed versions, so a fresh install had them before this
+  release.
+
 ## 0.12.0 — 2026-10-19
 
 - **SmartRecruiters and Workday pass the posting's location to the pay
