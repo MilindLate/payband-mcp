@@ -26,6 +26,7 @@ dependency from a JSON API and belongs behind a clearly separate door.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 import urllib.error
 import urllib.request
@@ -89,3 +90,73 @@ def atlassian(user_agent: str = "") -> list[dict[str, Any]]:
 
 
 EMPLOYERS = {"atlassian": atlassian}
+
+
+@dataclass(frozen=True)
+class Rejected:
+    """An employer whose careers endpoint was probed and rejected."""
+
+    reason: str
+    endpoint: str = ""
+    issue: int | None = 13
+    date: str = ""
+
+    def explain(self, company: str) -> str:
+        name = company.strip()
+        meta = []
+        if self.issue:
+            meta.append(f"#{self.issue}")
+        if self.date:
+            meta.append(f"probed {self.date}")
+        cite = f" ({', '.join(meta)})" if meta else ""
+        return (
+            f"{name} self-hosts. {self.reason.rstrip('.')}. "
+            f"This is a settled finding{cite}, not a lookup failure -- no slug will change it."
+        )
+
+
+UNREACHABLE: dict[str, Rejected] = {
+    "amazon": Rejected(
+        reason="Its Washington and California ranges are rendered into the HTML page only; the JSON API at amazon.jobs carries no pay at all",
+        endpoint="amazon.jobs/en/search.json",
+        issue=13,
+        date="2026-09-01",
+    ),
+    "apple": Rejected(
+        reason="jobs.apple.com/api answers 401 to anonymous requests",
+        endpoint="jobs.apple.com/api",
+        issue=13,
+        date="2026-09-01",
+    ),
+    "netflix": Rejected(
+        reason="Eightfold-hosted board returns job_description over a documented API with no salary range in it",
+        endpoint="jobs.netflix.com",
+        issue=13,
+        date="2026-09-01",
+    ),
+    "meta": Rejected(
+        reason="metacareers.com does not answer a plain GET request without browser session headers",
+        endpoint="metacareers.com",
+        issue=13,
+        date="2026-09-01",
+    ),
+    "microsoft": Rejected(
+        reason="careers.microsoft.com does not answer a plain GET request without browser session headers",
+        endpoint="careers.microsoft.com",
+        issue=13,
+        date="2026-09-01",
+    ),
+    "google": Rejected(
+        reason="careers.google.com renders postings client-side without a public unauthenticated salary API",
+        endpoint="careers.google.com",
+        issue=13,
+        date="2026-09-01",
+    ),
+    "alphabet": Rejected(
+        reason="careers.google.com renders postings client-side without a public unauthenticated salary API",
+        endpoint="careers.google.com",
+        issue=13,
+        date="2026-09-01",
+    ),
+}
+

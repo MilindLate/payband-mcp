@@ -352,6 +352,8 @@ def fetch_postings(
         # so it is addressed by name alone: board="atlassian".
         if name in selfhosted.EMPLOYERS and not slug:
             return name, selfhosted.EMPLOYERS[name](USER_AGENT)
+        if name in selfhosted.UNREACHABLE and not slug:
+            raise BoardNotFound(selfhosted.UNREACHABLE[name].explain(company or name))
         loader = dict(_BOARDS).get(name)
         if not loader:
             raise ValueError(
@@ -414,6 +416,16 @@ def fetch_postings(
         if postings:
             found = postings[0]["_detail"]
             return f"workday:{found['tenant']}/{found['site']}", postings
+
+    # Probed-and-rejected employers: explain why rather than sending the caller
+    # slug-hunting for a board that does not exist.
+    candidates = [company] + board_slugs(company)
+    for c in candidates:
+        norm = re.sub(r"[^a-z0-9]+", "", _fold_ascii(c))
+        rejected = selfhosted.UNREACHABLE.get(norm)
+        if rejected:
+            raise BoardNotFound(rejected.explain(company))
+
     raise BoardNotFound(
         f"No public Greenhouse, Ashby, Lever or SmartRecruiters board found "
         f"for {company!r} "
