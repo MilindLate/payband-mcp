@@ -6,7 +6,9 @@ because those quirks are where every bug so far has lived.
 
 from __future__ import annotations
 
-from payband_mcp import ats, smartrecruiters
+import pytest
+
+from payband_mcp import ats, keka, smartrecruiters
 
 
 def test_greenhouse_double_escaped_pay_element():
@@ -382,4 +384,118 @@ def test_board_slugs_fold_accents_to_ascii():
     # ASCII names come out unchanged
     assert ats.board_slugs("Goldman Sachs") == ["goldmansachs", "goldman-sachs"]
     assert ats.board_slugs("Roku") == ["roku"]
+
+
+def test_keka_board_is_registered():
+    """An adapter with green tests can be reachable by nothing (issue #27)."""
+    assert "keka" in [n for n, _ in ats._BOARDS]
+    assert "keka" in ats._CHEAP
+
+
+def test_keka_lists_postings_and_preserves_unstated_interval(monkeypatch):
+    """Keka bands with salaryPeriod 0 preserve interval=None (issue #27)."""
+    sample_jobs = [
+        {
+            "id": 101,
+            "title": "Backend Engineer",
+            "jobLocations": [
+                {
+                    "name": "Chennai",
+                    "city": "Chennai",
+                    "state": "TN",
+                    "countryCode": "IN",
+                    "countryName": "India",
+                }
+            ],
+            "salaryRange": {
+                "minimum": 1_200_000,
+                "maximum": 2_400_000,
+                "currency": "INR",
+                "salaryPeriod": 4,  # Annual
+            },
+        },
+        {
+            "id": 102,
+            "title": "Frontend Engineer",
+            "jobLocations": [
+                {
+                    "name": "Bengaluru",
+                    "city": "Bengaluru",
+                    "countryCode": "IN",
+                    "countryName": "India",
+                }
+            ],
+            "salaryRange": {
+                "minimum": 800_000,
+                "maximum": 1_500_000,
+                "currency": "INR",
+                "salaryPeriod": 0,  # Unstated
+            },
+        },
+    ]
+
+    calls = []
+
+    def fake_list(tenant, portal="default", role=""):
+        calls.append((tenant, portal, role))
+        for j in sample_jobs:
+            if not role or role in j["title"].lower():
+                yield j
+
+    monkeypatch.setattr(keka, "list_postings", fake_list)
+
+    board, postings = ats.fetch_postings("Acme Corp", board="keka:acme")
+    assert board == "keka:acme"
+    assert len(postings) == 2
+    assert calls == [("acme", "default", "")]
+
+    # Check first posting (stated annual interval)
+    assert postings[0]["title"] == "Backend Engineer"
+    assert postings[0]["location"] == "Chennai, India"
+    assert postings[0]["url"] == "https://acme.keka.com/careers/details/101"
+    assert postings[0]["board"] == "keka"
+    assert postings[0]["company"] == "acme"
+    assert postings[0]["pay"] == {
+        "min": 1200000.0,
+        "max": 2400000.0,
+        "currency": "INR",
+        "interval": "year",
+        "basis": "base",
+        "source": "structured",
+    }
+
+    # Check second posting (salaryPeriod 0 -> interval must stay None)
+    assert postings[1]["title"] == "Frontend Engineer"
+    assert postings[1]["location"] == "Bengaluru, India"
+    assert postings[1]["url"] == "https://acme.keka.com/careers/details/102"
+    assert postings[1]["pay"] == {
+        "min": 800000.0,
+        "max": 1500000.0,
+        "currency": "INR",
+        "interval": None,
+        "basis": "base",
+        "source": "structured",
+    }
+
+
+def test_keka_not_found_raises_board_not_found(monkeypatch):
+    def fake_list(tenant, portal="default", role=""):
+        raise keka.KekaNotFound(tenant)
+
+    monkeypatch.setattr(keka, "list_postings", fake_list)
+
+    with pytest.raises(ats.BoardNotFound):
+        ats.fetch_postings("Acme Corp", board="keka:acme")
+
+
+def test_keka_custom_portal_in_spec(monkeypatch):
+    calls = []
+
+    def fake_list(tenant, portal="default", role=""):
+        calls.append((tenant, portal, role))
+        return iter([{"id": 1, "title": "Dev"}])
+
+    monkeypatch.setattr(keka, "list_postings", fake_list)
+    ats.fetch_postings("Acme", board="keka:acme/engineering")
+    assert calls == [("acme", "engineering", "")]
 

@@ -74,7 +74,7 @@ Without it the comparison misleads — GitLab's Polish band reads as
 paying more and is actually **0.48x**.
 
 Reads the **public job-board APIs** — Greenhouse, Ashby, Lever,
-SmartRecruiters and Workday — plus a small number of employers who run their
+SmartRecruiters, Keka and Workday — plus a small number of employers who run their
 own endpoint. Documented, intended for machines, and stable — not scraping.
 
 ## Tools
