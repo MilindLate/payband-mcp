@@ -149,6 +149,10 @@ SmartRecruiters company ids come from
 `careers.smartrecruiters.com/<company-id>` and are also guessed from the
 company name. Pass `board="smartrecruiters:<company-id>"` when they differ.
 
+Keka tenants come from `<tenant>.keka.com/careers`. Pass
+`board="keka:<tenant>"`, and add `/<portal>` when the site has a named one
+(e.g. `board="keka:<tenant>/<portal>"`).
+
 Atlassian self-hosts and is reached by name, through its own endpoint. Its US
 roles publish three geographic zones (`Zone A/B/C`), which are reported as
 separate bands rather than collapsed — their union spans 1.6x and is nobody's

@@ -452,7 +452,7 @@ def test_keka_lists_postings_and_preserves_unstated_interval(monkeypatch):
     # Check first posting (stated annual interval)
     assert postings[0]["title"] == "Backend Engineer"
     assert postings[0]["location"] == "Chennai, India"
-    assert postings[0]["url"] == "https://acme.keka.com/careers/details/101"
+    assert postings[0]["url"] == "https://acme.keka.com/careers/jobdetails/101"
     assert postings[0]["board"] == "keka"
     assert postings[0]["company"] == "acme"
     assert postings[0]["pay"] == {
@@ -467,7 +467,7 @@ def test_keka_lists_postings_and_preserves_unstated_interval(monkeypatch):
     # Check second posting (salaryPeriod 0 -> interval must stay None)
     assert postings[1]["title"] == "Frontend Engineer"
     assert postings[1]["location"] == "Bengaluru, India"
-    assert postings[1]["url"] == "https://acme.keka.com/careers/details/102"
+    assert postings[1]["url"] == "https://acme.keka.com/careers/jobdetails/102"
     assert postings[1]["pay"] == {
         "min": 800000.0,
         "max": 1500000.0,
@@ -498,4 +498,20 @@ def test_keka_custom_portal_in_spec(monkeypatch):
     monkeypatch.setattr(keka, "list_postings", fake_list)
     ats.fetch_postings("Acme", board="keka:acme/engineering")
     assert calls == [("acme", "engineering", "")]
+
+
+def test_keka_posting_url_uses_jobdetails_path(monkeypatch):
+    """Keka posting URLs use /careers/jobdetails/{id}; /careers/details/{id} 404s."""
+    monkeypatch.setattr(
+        keka,
+        "list_postings",
+        lambda tenant, portal="default", role="": [
+            {"id": 145654, "title": "Senior Dev"},
+            {"id": None, "title": "General App"},
+        ],
+    )
+    _, postings = ats.fetch_postings("IHL", board="keka:ihl")
+    assert postings[0]["url"] == "https://ihl.keka.com/careers/jobdetails/145654"
+    assert postings[1]["url"] == "https://ihl.keka.com/careers/"
+
 

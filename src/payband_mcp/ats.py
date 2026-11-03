@@ -230,12 +230,9 @@ def _keka(slug: str, role: str = "") -> list[dict[str, Any]]:
         for job in keka.list_postings(tenant, portal, role):
             posting_id = str(job.get("id") or "")
             url = (
-                job.get("url")
-                or (
-                    f"https://{tenant}.keka.com/careers/details/{posting_id}"
-                    if posting_id
-                    else f"https://{tenant}.keka.com/careers/"
-                )
+                f"https://{tenant}.keka.com/careers/jobdetails/{posting_id}"
+                if posting_id
+                else f"https://{tenant}.keka.com/careers/"
             )
             out.append(
                 _posting(
