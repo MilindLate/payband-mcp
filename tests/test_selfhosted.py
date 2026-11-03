@@ -111,20 +111,29 @@ def test_prefix_labels_do_not_swallow_ordinary_prose():
 
 
 def test_unreachable_employers_are_documented():
-    """Settled negative findings carry reason, endpoint, issue, and probe date."""
-    expected = {"amazon", "apple", "netflix", "meta", "microsoft", "google"}
+    """Settled negative findings carry reason, endpoint, issue, and recorded date."""
+    expected = {"amazon", "apple", "netflix", "meta", "microsoft"}
     assert expected.issubset(set(selfhosted.UNREACHABLE))
 
     for key in expected:
         entry = selfhosted.UNREACHABLE[key]
         assert entry.reason, f"{key} missing reason"
-        assert entry.date, f"{key} missing probe date"
+        assert entry.date == "2026-09-17", f"{key} wrong date"
         assert entry.issue == 13
+
+    # Meta, Microsoft, and Netflix endpoints are not in the record
+    assert selfhosted.UNREACHABLE["meta"].endpoint == ""
+    assert selfhosted.UNREACHABLE["microsoft"].endpoint == ""
+    assert selfhosted.UNREACHABLE["netflix"].endpoint == ""
+
+    # Amazon and Apple have endpoints from the record
+    assert selfhosted.UNREACHABLE["amazon"].endpoint == "amazon.jobs/en/search.json"
+    assert selfhosted.UNREACHABLE["apple"].endpoint == "jobs.apple.com/api"
 
     amazon = selfhosted.UNREACHABLE["amazon"]
     explained = amazon.explain("Amazon")
     assert "Amazon self-hosts." in explained
-    assert "settled finding (#13, probed 2026-09-01)" in explained
+    assert "settled finding (#13, recorded 2026-09-17)" in explained
     assert "not a lookup failure -- no slug will change it" in explained
 
 
@@ -148,13 +157,34 @@ def test_fetch_postings_explains_other_rejected_employers(monkeypatch):
     """All probed-and-rejected employers produce their settled finding."""
     monkeypatch.setattr(ats, "_BOARDS", ())
     monkeypatch.setattr(ats, "_workday", lambda slug, role="": [])
-    for company in ["Apple", "Apple Inc.", "Netflix", "Meta", "Microsoft", "Google"]:
+    for company in [
+        "Apple",
+        "Apple Inc.",
+        "Netflix",
+        "Netflix Inc.",
+        "Meta",
+        "Meta Platforms",
+        "Microsoft",
+        "Amazon.com",
+    ]:
         with pytest.raises(ats.BoardNotFound) as caught:
             ats.fetch_postings(company)
         msg = str(caught.value)
         assert "self-hosts." in msg
         assert "settled finding" in msg
         assert "not a lookup failure" in msg
+
+
+def test_google_not_probed_falls_through_to_unprobed_slug_advice(monkeypatch):
+    """Google was never probed, so it stays in the unprobed bucket with slug advice."""
+    assert "google" not in selfhosted.UNREACHABLE
+    assert "alphabet" not in selfhosted.UNREACHABLE
+    monkeypatch.setattr(ats, "_BOARDS", ())
+    monkeypatch.setattr(ats, "_workday", lambda slug, role="": [])
+    with pytest.raises(ats.BoardNotFound) as caught:
+        ats.fetch_postings("Google")
+    msg = str(caught.value)
+    assert "Two common reasons: the board token differs from the company name" in msg
 
 
 def test_explicit_board_for_rejected_employer_is_honored(monkeypatch):

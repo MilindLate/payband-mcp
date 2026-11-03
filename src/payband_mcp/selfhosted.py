@@ -10,18 +10,8 @@ named explicitly rather than guessed from a slug, and each will break on its
 own schedule. They are kept apart from `ats.py` so that when one does break
 it cannot take the board adapters down with it.
 
-What was probed and rejected, so nobody repeats it:
-
-* **amazon.jobs** serves clean JSON (`/en/search.json`) and no pay whatsoever
-  -- not in the list, not in `description`, not in the per-job `.json`. Amazon
-  renders its Washington and California ranges into the HTML page only.
-* **Netflix**, and Eightfold-hosted boards generally, return `job_description`
-  over a documented API with no range in it.
-* **Apple** (`jobs.apple.com/api`) answers 401 to an anonymous request.
-* **Meta** and **Microsoft** did not answer a plain GET at all.
-
-Each of those would need HTML scraping, which is a different kind of
-dependency from a JSON API and belongs behind a clearly separate door.
+What was probed and rejected is recorded in `UNREACHABLE` so nobody repeats it
+and callers hear the specific reason rather than generic slug advice.
 """
 
 from __future__ import annotations
@@ -107,7 +97,7 @@ class Rejected:
         if self.issue:
             meta.append(f"#{self.issue}")
         if self.date:
-            meta.append(f"probed {self.date}")
+            meta.append(f"recorded {self.date}")
         cite = f" ({', '.join(meta)})" if meta else ""
         return (
             f"{name} self-hosts. {self.reason.rstrip('.')}. "
@@ -115,48 +105,47 @@ class Rejected:
         )
 
 
+_AMAZON = Rejected(
+    reason="Its Washington and California ranges are rendered into the HTML page only; the JSON API at amazon.jobs carries no pay at all",
+    endpoint="amazon.jobs/en/search.json",
+    issue=13,
+    date="2026-09-17",
+)
+_APPLE = Rejected(
+    reason="jobs.apple.com/api answers 401 to an anonymous request",
+    endpoint="jobs.apple.com/api",
+    issue=13,
+    date="2026-09-17",
+)
+_NETFLIX = Rejected(
+    reason="Eightfold-hosted board returns job_description over a documented API with no range in it",
+    endpoint="",
+    issue=13,
+    date="2026-09-17",
+)
+_META = Rejected(
+    reason="did not answer a plain GET at all",
+    endpoint="",
+    issue=13,
+    date="2026-09-17",
+)
+_MICROSOFT = Rejected(
+    reason="did not answer a plain GET at all",
+    endpoint="",
+    issue=13,
+    date="2026-09-17",
+)
+
 UNREACHABLE: dict[str, Rejected] = {
-    "amazon": Rejected(
-        reason="Its Washington and California ranges are rendered into the HTML page only; the JSON API at amazon.jobs carries no pay at all",
-        endpoint="amazon.jobs/en/search.json",
-        issue=13,
-        date="2026-09-01",
-    ),
-    "apple": Rejected(
-        reason="jobs.apple.com/api answers 401 to anonymous requests",
-        endpoint="jobs.apple.com/api",
-        issue=13,
-        date="2026-09-01",
-    ),
-    "netflix": Rejected(
-        reason="Eightfold-hosted board returns job_description over a documented API with no salary range in it",
-        endpoint="jobs.netflix.com",
-        issue=13,
-        date="2026-09-01",
-    ),
-    "meta": Rejected(
-        reason="metacareers.com does not answer a plain GET request without browser session headers",
-        endpoint="metacareers.com",
-        issue=13,
-        date="2026-09-01",
-    ),
-    "microsoft": Rejected(
-        reason="careers.microsoft.com does not answer a plain GET request without browser session headers",
-        endpoint="careers.microsoft.com",
-        issue=13,
-        date="2026-09-01",
-    ),
-    "google": Rejected(
-        reason="careers.google.com renders postings client-side without a public unauthenticated salary API",
-        endpoint="careers.google.com",
-        issue=13,
-        date="2026-09-01",
-    ),
-    "alphabet": Rejected(
-        reason="careers.google.com renders postings client-side without a public unauthenticated salary API",
-        endpoint="careers.google.com",
-        issue=13,
-        date="2026-09-01",
-    ),
+    "amazon": _AMAZON,
+    "amazoncom": _AMAZON,
+    "apple": _APPLE,
+    "appleinc": _APPLE,
+    "netflix": _NETFLIX,
+    "netflixinc": _NETFLIX,
+    "meta": _META,
+    "metaplatforms": _META,
+    "microsoft": _MICROSOFT,
+    "microsoftcorp": _MICROSOFT,
 }
 
