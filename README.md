@@ -74,7 +74,7 @@ Without it the comparison misleads — GitLab's Polish band reads as
 paying more and is actually **0.48x**.
 
 Reads the **public job-board APIs** — Greenhouse, Ashby, Lever,
-SmartRecruiters and Workday — plus a small number of employers who run their
+SmartRecruiters, Keka and Workday — plus a small number of employers who run their
 own endpoint. Documented, intended for machines, and stable — not scraping.
 
 ## Tools
@@ -148,6 +148,10 @@ company name, paste the careers URL or pass
 SmartRecruiters company ids come from
 `careers.smartrecruiters.com/<company-id>` and are also guessed from the
 company name. Pass `board="smartrecruiters:<company-id>"` when they differ.
+
+Keka tenants come from `<tenant>.keka.com/careers`. Pass
+`board="keka:<tenant>"`, and add `/<portal>` when the site has a named one
+(e.g. `board="keka:<tenant>/<portal>"`).
 
 Atlassian self-hosts and is reached by name, through its own endpoint. Its US
 roles publish three geographic zones (`Zone A/B/C`), which are reported as

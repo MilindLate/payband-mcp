@@ -497,13 +497,15 @@ def job_openings(
     """List a company's open roles, with the pay range where one is published.
 
     Reads the company's public job-board API (Greenhouse, Ashby, Lever,
-    SmartRecruiters or Workday).
+    SmartRecruiters, Keka or Workday).
     `role` filters to titles containing every word you give, so "forward
     deployed" matches "AI Engineer - FDE (Forward Deployed Engineer)".
 
     Not every employer is reachable: Google, Meta, Amazon and Apple self-host
     their careers sites and are not on these boards. Workday tenants (NVIDIA,
     Salesforce, Adobe, Cisco, HPE) are, and are found from the company name.
+    Keka tenants are rarely the company name; read the tenant from
+    `<tenant>.keka.com/careers` and pass `board="keka:<tenant>"`.
     """
     board, postings = ats.fetch_postings(company, board or None, role=role)
     hits = ats.matching(postings, role) if role else postings
