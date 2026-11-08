@@ -23,7 +23,7 @@ from typing import Any, Iterable
 
 import httpx
 
-from . import money, selfhosted, smartrecruiters, workday
+from . import keka, money, selfhosted, smartrecruiters, workday
 from . import __version__
 
 USER_AGENT = f"payband-mcp/{__version__} (+https://github.com/dheerajjha/payband-mcp)"
@@ -219,17 +219,48 @@ def _smartrecruiters(slug: str, role: str = "") -> list[dict[str, Any]]:
     return out
 
 
+def _keka(slug: str, role: str = "") -> list[dict[str, Any]]:
+    if "/" in slug:
+        tenant, _, portal = slug.partition("/")
+        portal = portal or keka.DEFAULT_PORTAL
+    else:
+        tenant, portal = slug, keka.DEFAULT_PORTAL
+    out = []
+    try:
+        for job in keka.list_postings(tenant, portal, role):
+            posting_id = str(job.get("id") or "")
+            url = (
+                f"https://{tenant}.keka.com/careers/jobdetails/{posting_id}"
+                if posting_id
+                else f"https://{tenant}.keka.com/careers/"
+            )
+            out.append(
+                _posting(
+                    job.get("title"),
+                    keka.location(job),
+                    url,
+                    keka.pay(job),
+                    tenant,
+                    "keka",
+                )
+            )
+    except keka.KekaNotFound as exc:
+        raise BoardNotFound(str(exc)) from exc
+    return out
+
+
 _BOARDS = (
     ("greenhouse", _greenhouse),
     ("ashby", _ashby),
     ("lever", _lever),
     ("smartrecruiters", _smartrecruiters),
+    ("keka", _keka),
     ("workday", _workday),
 )
 # Boards that answer with everything in one request, so guessing a slug
 # against them is cheap. Workday needs host discovery plus a search, so it is
 # only tried once these have all missed.
-_CHEAP = {"greenhouse", "ashby", "lever", "smartrecruiters"}
+_CHEAP = {"greenhouse", "ashby", "lever", "smartrecruiters", "keka"}
 
 
 def enrich_pay(postings: list[dict[str, Any]], limit: int = 40) -> int:
@@ -363,7 +394,7 @@ def fetch_postings(
         target = slug or board_slugs(company)[0]
         postings = (
             loader(target, role)
-            if name in {"workday", "smartrecruiters"}
+            if name in {"workday", "smartrecruiters", "keka"}
             else loader(target)
         )
         if not postings:
@@ -392,10 +423,13 @@ def fetch_postings(
         for slug in board_slugs(company):
             try:
                 postings = (
-                    loader(slug, role) if name == "smartrecruiters" else loader(slug)
+                    loader(slug, role)
+                    if name in {"smartrecruiters", "keka"}
+                    else loader(slug)
                 )
             except (
                 BoardNotFound,
+                keka.KekaNotFound,
                 smartrecruiters.SmartRecruitersNotFound,
                 urllib.error.URLError,
                 httpx.HTTPError,
@@ -427,14 +461,15 @@ def fetch_postings(
             raise BoardNotFound(rejected.explain(company))
 
     raise BoardNotFound(
-        f"No public Greenhouse, Ashby, Lever or SmartRecruiters board found "
+        f"No public Greenhouse, Ashby, Lever, SmartRecruiters or Keka board found "
         f"for {company!r} "
         f"(tried slugs {board_slugs(company)}). Two common reasons: the board "
         f"token differs from the company name -- open their careers page and "
         f"read it out of the URL (job-boards.greenhouse.io/<slug>, "
         f"jobs.ashbyhq.com/<slug>, jobs.lever.co/<slug>, "
-        f"careers.smartrecruiters.com/<slug>), then pass "
-        f"board='greenhouse:<slug>' -- or the employer self-hosts and is on "
+        f"careers.smartrecruiters.com/<slug>, <tenant>.keka.com/careers), "
+        f"then pass board='greenhouse:<slug>' (or board='keka:<tenant>') -- "
+        f"or the employer self-hosts and is on "
         f"none of these boards, which is the case for Google, Meta, Amazon "
         f"and Apple. Workday tenants are found automatically, but only under "
         f"the company name: if theirs differs, pass "
