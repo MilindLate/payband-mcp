@@ -10,8 +10,23 @@ named explicitly rather than guessed from a slug, and each will break on its
 own schedule. They are kept apart from `ats.py` so that when one does break
 it cannot take the board adapters down with it.
 
-What was probed and rejected is recorded in `UNREACHABLE` so nobody repeats it
-and callers hear the specific reason rather than generic slug advice.
+What was probed and rejected, so nobody repeats it:
+
+* **amazon.jobs** serves clean JSON (`/en/search.json`) and no pay whatsoever
+  -- not in the list, not in `description`, not in the per-job `.json`. Amazon
+  renders its Washington and California ranges into the HTML page only.
+* **Netflix**, and Eightfold-hosted boards generally, return `job_description`
+  over a documented API with no range in it.
+* **Apple** (`jobs.apple.com/api`) answers 401 to an anonymous request.
+* **Meta** and **Microsoft** did not answer a plain GET at all.
+
+Each of those would need HTML scraping, which is a different kind of
+dependency from a JSON API and belongs behind a clearly separate door.
+
+`UNREACHABLE` at the bottom carries the same findings as data, so a caller is
+told the reason instead of being sent to hunt for a board slug (#29). The list
+above is the evidence and the table is what callers see: change one, change
+the other.
 """
 
 from __future__ import annotations
@@ -84,7 +99,16 @@ EMPLOYERS = {"atlassian": atlassian}
 
 @dataclass(frozen=True)
 class Rejected:
-    """An employer whose careers endpoint was probed and rejected."""
+    """An employer whose careers endpoint was probed and rejected.
+
+    A dated finding, not a fact about the world: the employer could open an
+    API next quarter, and `date` says when this was written down.
+
+    `reason` is one sentence, with `{name}` standing for the employer as the
+    caller named it. It says only what the record above says -- "self-hosts"
+    included, which is true of Amazon, Apple and Meta and not known of the
+    others (Netflix is on Eightfold).
+    """
 
     reason: str
     endpoint: str = ""
@@ -92,7 +116,6 @@ class Rejected:
     date: str = ""
 
     def explain(self, company: str) -> str:
-        name = company.strip()
         meta = []
         if self.issue:
             meta.append(f"#{self.issue}")
@@ -100,37 +123,37 @@ class Rejected:
             meta.append(f"recorded {self.date}")
         cite = f" ({', '.join(meta)})" if meta else ""
         return (
-            f"{name} self-hosts. {self.reason.rstrip('.')}. "
+            f"{self.reason.format(name=company.strip()).rstrip('.')}. "
             f"This is a settled finding{cite}, not a lookup failure -- no slug will change it."
         )
 
 
 _AMAZON = Rejected(
-    reason="Its Washington and California ranges are rendered into the HTML page only; the JSON API at amazon.jobs carries no pay at all",
+    reason="{name} self-hosts. Its Washington and California ranges are rendered into the HTML page only; the JSON API at amazon.jobs carries no pay at all",
     endpoint="amazon.jobs/en/search.json",
     issue=13,
     date="2026-09-17",
 )
 _APPLE = Rejected(
-    reason="jobs.apple.com/api answers 401 to an anonymous request",
+    reason="{name} self-hosts, and jobs.apple.com/api answers 401 to an anonymous request",
     endpoint="jobs.apple.com/api",
     issue=13,
     date="2026-09-17",
 )
 _NETFLIX = Rejected(
-    reason="Eightfold-hosted board returns job_description over a documented API with no range in it",
+    reason="{name}'s board is on Eightfold, whose documented API returns job_description with no range in it",
     endpoint="",
     issue=13,
     date="2026-09-17",
 )
 _META = Rejected(
-    reason="did not answer a plain GET at all",
+    reason="{name} self-hosts, and its careers site did not answer a plain GET at all",
     endpoint="",
     issue=13,
     date="2026-09-17",
 )
 _MICROSOFT = Rejected(
-    reason="did not answer a plain GET at all",
+    reason="{name}'s careers site did not answer a plain GET at all",
     endpoint="",
     issue=13,
     date="2026-09-17",

@@ -154,25 +154,33 @@ def test_fetch_postings_explains_amazon_instead_of_slug_hunting(monkeypatch):
 
 
 def test_fetch_postings_explains_other_rejected_employers(monkeypatch):
-    """All probed-and-rejected employers produce their settled finding."""
+    """Each probed-and-rejected employer gets its own finding, as a sentence that
+    starts with the name it was asked about and claims nothing the record does not."""
     monkeypatch.setattr(ats, "_BOARDS", ())
     monkeypatch.setattr(ats, "_workday", lambda slug, role="": [])
-    for company in [
-        "Apple",
-        "Apple Inc.",
-        "Netflix",
-        "Netflix Inc.",
-        "Meta",
-        "Meta Platforms",
-        "Microsoft",
-        "Amazon.com",
-    ]:
+    expected = {
+        "Apple": "Apple self-hosts, and jobs.apple.com/api answers 401 to an anonymous request.",
+        "Apple Inc.": "Apple Inc. self-hosts, and jobs.apple.com/api answers 401",
+        "Netflix": "Netflix's board is on Eightfold, whose documented API returns job_description with no range in it.",
+        "Netflix Inc.": "Netflix Inc.'s board is on Eightfold",
+        "Meta": "Meta self-hosts, and its careers site did not answer a plain GET at all.",
+        "Meta Platforms": "Meta Platforms self-hosts, and its careers site",
+        "Microsoft": "Microsoft's careers site did not answer a plain GET at all.",
+        "Amazon.com": "Amazon.com self-hosts. Its Washington and California ranges",
+    }
+    for company, finding in expected.items():
         with pytest.raises(ats.BoardNotFound) as caught:
             ats.fetch_postings(company)
         msg = str(caught.value)
-        assert "self-hosts." in msg
-        assert "settled finding" in msg
+        assert msg.startswith(finding), msg
+        assert "settled finding (#13, recorded 2026-09-17)" in msg
         assert "not a lookup failure" in msg
+    # The record says Amazon, Apple and Meta self-host. It does not say so of
+    # Microsoft, and Netflix is on Eightfold.
+    for company in ("Netflix", "Microsoft"):
+        with pytest.raises(ats.BoardNotFound) as caught:
+            ats.fetch_postings(company)
+        assert "self-hosts" not in str(caught.value)
 
 
 def test_google_not_probed_falls_through_to_unprobed_slug_advice(monkeypatch):
